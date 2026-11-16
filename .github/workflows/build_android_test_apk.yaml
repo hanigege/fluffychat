@@ -18,6 +18,7 @@ jobs:
           cache: true
       - uses: dtolnay/rust-toolchain@stable
       - run: flutter pub get
+      - run: flutter test test/call_keys_event_content_test.dart --no-pub
       - run: flutter build apk --debug --target-platform android-arm64 --no-pub
       - uses: actions/upload-artifact@v7
         with:
