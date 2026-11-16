@@ -49,21 +49,29 @@ class CallKeysEventContent {
   factory CallKeysEventContent.fromJson(Map<String, Object?> json) =>
       CallKeysEventContent(
         keys: CallKeysEntry.fromJson(
-          Map<String, Object?>.from(json['keys'] as Map),
+          Map<String, Object?>.from((json['media_key'] ?? json['keys']) as Map),
         ),
         member: CallKeysMember.fromJson(
           Map<String, Object?>.from(json['member'] as Map),
         ),
         roomId: json['room_id'] as String,
-        session: CallKeysSession.fromJson(
-          Map<String, Object?>.from(json['session'] as Map),
-        ),
+        session: json['session'] is Map
+            ? CallKeysSession.fromJson(
+                Map<String, Object?>.from(json['session'] as Map),
+              )
+            : const CallKeysSession(
+                application: 'm.call',
+                callId: '',
+                scope: 'm.room',
+              ),
         sentTs: json['sent_ts'] as int?,
       );
 
   Map<String, Object?> toJson() => {
     'keys': keys.toJson(),
+    'media_key': keys.toJson(),
     'member': member.toJson(),
+    'member_id': member.id,
     'room_id': roomId,
     'session': session.toJson(),
     if (sentTs != null) 'sent_ts': sentTs,
