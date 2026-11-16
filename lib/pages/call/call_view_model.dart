@@ -209,9 +209,6 @@ class CallViewModel extends ValueNotifier<CallViewModelState> {
         defaultScreenShareCaptureOptions: lk.ScreenShareCaptureOptions(
           useiOSBroadcastExtension: PlatformInfos.isIOS,
         ),
-        defaultAudioOutputOptions: lk.AudioOutputOptions(
-          speakerOn: PlatformInfos.isMobile,
-        ),
         encryption: lk.E2EEOptions(keyProvider: baseKeyProvider),
       ),
     );
@@ -580,9 +577,8 @@ class CallViewModel extends ValueNotifier<CallViewModelState> {
   }
 
   Future<void> selectSpeaker(BuildContext context) async {
-    final devices = await lk.Hardware.instance.audioOutputs();
     if (!context.mounted) return;
-    if (devices.isEmpty && PlatformInfos.isMobile) {
+    if (PlatformInfos.isMobile) {
       final preferSpeaker = lk.AudioManager.instance.isSpeakerOutputPreferred;
       final toggle = await showMenu<bool>(
         context: context,
@@ -615,6 +611,8 @@ class CallViewModel extends ValueNotifier<CallViewModelState> {
       await lk.AudioManager.instance.setSpeakerOutputPreferred(!preferSpeaker);
       return;
     }
+    final devices = await lk.Hardware.instance.audioOutputs();
+    if (!context.mounted) return;
     final source = await _selectMediaDevice(
       context,
       devices,
