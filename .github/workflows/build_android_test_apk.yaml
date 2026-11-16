@@ -1,0 +1,26 @@
+name: Build Android test APK
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-26.04
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/free_up_space
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version-file: .fvmrc
+          cache: true
+      - uses: dtolnay/rust-toolchain@stable
+      - run: flutter pub get
+      - run: flutter build apk --debug --target-platform android-arm64 --no-pub
+      - uses: actions/upload-artifact@v7
+        with:
+          name: fluffychat-call-test-arm64
+          path: build/app/outputs/flutter-apk/app-debug.apk
+          retention-days: 7
