@@ -39,6 +39,7 @@ class CallPage extends StatelessWidget {
         final liveKitRoom = viewModel.value.room;
         final localVideoTrack = viewModel.value.localVideoTrack;
         final localParticipant = liveKitRoom?.localParticipant;
+        final error = viewModel.value.error;
 
         final activeMembers = room.getActiveMatrixRtcMembers().length;
         final ownUser = room.unsafeGetUserFromMemoryOrFallback(
@@ -168,37 +169,30 @@ class CallPage extends StatelessWidget {
                               )
                             : VideoTrackRenderer(localVideoTrack, fit: .cover),
 
-                        Align(
-                          alignment: .topCenter,
-                          child: SafeArea(
-                            child: Container(
-                              decoration: BoxDecoration(
-                                color: viewModel.value.error == null
-                                    ? theme.colorScheme.errorContainer
-                                          .withAlpha(230)
-                                    : theme.colorScheme.error.withAlpha(230),
-                                borderRadius: BorderRadius.circular(
-                                  AppConfig.borderRadius,
+                        if (error != null)
+                          Align(
+                            alignment: .topCenter,
+                            child: SafeArea(
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: theme.colorScheme.error.withAlpha(230),
+                                  borderRadius: BorderRadius.circular(
+                                    AppConfig.borderRadius,
+                                  ),
                                 ),
-                              ),
-                              margin: EdgeInsets.all(16.0),
-                              padding: EdgeInsets.all(16.0),
-                              child: Text(
-                                viewModel.value.error?.toLocalizedString(
-                                      context,
-                                    ) ??
-                                    L10n.of(context).videoCallsBetaWarning,
-                                textAlign: .center,
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  color: viewModel.value.error == null
-                                      ? theme.colorScheme.onErrorContainer
-                                      : theme.colorScheme.onError,
+                                margin: EdgeInsets.all(16.0),
+                                padding: EdgeInsets.all(16.0),
+                                child: Text(
+                                  error.toLocalizedString(context),
+                                  textAlign: .center,
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: theme.colorScheme.onError,
+                                  ),
                                 ),
                               ),
                             ),
                           ),
-                        ),
                       ],
                     )
                   : SafeArea(
