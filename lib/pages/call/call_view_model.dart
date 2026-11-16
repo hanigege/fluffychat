@@ -151,25 +151,43 @@ class CallViewModel extends ValueNotifier<CallViewModelState> {
         ? currentParticipants.difference(_lastSharedParticipants)
         : currentParticipants;
     final deviceKeys = <DeviceKeys>[];
+    final missingUserIds = <String>{};
     for (final membershipId in forwardParticipants) {
       final membershipParts = membershipId.split(':');
       final deviceId = membershipParts.removeLast();
       final userId = membershipParts.join(':');
       final keys = room.client.userDeviceKeys[userId]?.deviceKeys[deviceId];
       if (keys == null) {
-        Logs().w('No device keys found for $membershipId');
+        missingUserIds.add(userId);
         continue;
       }
       deviceKeys.add(keys);
     }
 
-    _lastSharedParticipants = currentParticipants;
+    if (missingUserIds.isNotEmpty) {
+      await room.client.userDeviceKeysLoading;
+      await room.client.updateUserDeviceKeys(additionalUsers: missingUserIds);
+      for (final membershipId in forwardParticipants) {
+        final membershipParts = membershipId.split(':');
+        final deviceId = membershipParts.removeLast();
+        final userId = membershipParts.join(':');
+        final keys = room.client.userDeviceKeys[userId]?.deviceKeys[deviceId];
+        if (keys != null && !deviceKeys.contains(keys)) deviceKeys.add(keys);
+      }
+    }
+
     await room.shareMatrixRtcCallKey(
       key: key,
       index: index,
       memberId: ownMemberId,
       deviceKeys: deviceKeys,
     );
+    _lastSharedParticipants = {
+      ..._lastSharedParticipants.intersection(currentParticipants),
+      ...deviceKeys
+          .where((keys) => keys.encryptToDevice)
+          .map((keys) => '${keys.userId}:${keys.deviceId}'),
+    };
   }
 
   Future<void> _init() async {
